@@ -25,7 +25,10 @@
 		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://www.paypal.me/joemerlino"]];
 	}
 	-(void) sendEmail{
-		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"mailto:merlino.giuseppe1@gmail.com?subject=OpenOnSearch"]];
+		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"mailto:merlino.giuseppe1@gmail.com?subject=BreadCrumbArrow"]];
+	}
+	-(void) respring{
+		system("killall -9 SpringBoard");
 	}
 	
 @end
