@@ -1,4 +1,19 @@
-%group SHOW
+static BOOL name, hide;
+
+%group NOIMAGE
+%hook _UIStatusBarSystemNavigationItemButton 
+- (struct CGRect )imageRectForContentRect:(struct CGRect)arg1{
+	return CGRectMake(0,0,0,0);
+}
+%end
+%end
+
+%group MOD
+
+id a;
+static BOOL draw = NO;
+static float bread = 0;
+
 %hook UIStatusBarItem
 + (BOOL)isItemWithTypeExclusive:(int)arg1{
 	if(arg1 == 32)
@@ -6,26 +21,59 @@
 	else return %orig;
 }
 %end
-%end
-
-%group NAME
 %hook UIStatusBarBreadcrumbItemView
-static id a;
 - (id)destinationText{
 	a = %orig;
 	return %orig;
 }
 - (id)shortenedTitleWithCompressionLevel:(int)arg1{
-	return a;
+	if(!name)
+		arg1 = 1;
+	id title = %orig;
+	if(title)
+		return a;
+	else return %orig;
+}
+%end
+// float correctly the breadcrumb before the airplane icon
+%hook UIStatusBarSystemNavigationItemView
+- (struct CGSize)_buttonSize{
+	CGSize btn = %orig;
+	bread = btn.width; 
+	draw = YES;
+	return %orig;
+}
+%end
+%hook UIStatusBarItemView
+- (void)setVisible:(BOOL)arg1 frame:(struct CGRect )arg2 duration:(double)arg3{
+	if(arg2.origin.x == 25)
+		arg2.origin.x = 6;
+	%orig;
+}
+%end
+%hook UIStatusBarAirplaneModeItemView
+- (void)setVisible:(BOOL)arg1 frame:(struct CGRect )arg2 duration:(double)arg3{
+	if(draw){
+		draw = NO;
+		arg3 = 0.5;
+		arg2.origin.x += bread;
+	}
+	%orig;
 }
 %end
 %end
 
-%group COMPACT
-%hook UIStatusBarBreadcrumbItemView
-- (id)shortenedTitleWithCompressionLevel:(int)arg1{
-	arg1 = 1;
-	return %orig;
+%group HIDE
+%hook UIStatusBarItem
++ (BOOL)isItemWithTypeExclusive:(int)arg1{
+	if(arg1 == 32)
+		return NO;
+	else return %orig;
+}
+%end
+%hook UIStatusBarSystemNavigationItemView
+- (struct CGSize)_buttonSize{
+	return CGSizeMake(0,0);
 }
 %end
 %end
@@ -39,10 +87,13 @@ static void PreferencesCallback(CFNotificationCenterRef center, void *observer, 
 {
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PreferencesCallback, CFSTR("com.joemerlino.breadcrumbarrow.preferencechanged"), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:@"/private/var/mobile/Library/Preferences/com.joemerlino.breadcrumbarrow.plist"];
-	BOOL name = ([prefs objectForKey:@"name"] ? [[prefs objectForKey:@"name"] boolValue] : NO);
-	%init(SHOW);
-	if (name)
-        %init(NAME);
-    else
-    	%init(COMPACT);
+	name = ([prefs objectForKey:@"name"] ? [[prefs objectForKey:@"name"] boolValue] : NO);
+	hide = ([prefs objectForKey:@"hide"] ? [[prefs objectForKey:@"hide"] boolValue] : NO);
+	if (!name && hide)
+		%init(HIDE);
+	else{
+		if(hide)
+			%init(NOIMAGE);
+		%init(MOD);
+	}
 }
