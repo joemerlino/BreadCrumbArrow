@@ -46,7 +46,7 @@ static float bread = 0;
 %end
 %hook UIStatusBarItemView
 - (void)setVisible:(BOOL)arg1 frame:(struct CGRect )arg2 duration:(double)arg3{
-	if(arg2.origin.x == 25)
+	if([NSStringFromClass([self class]) containsString:@"UIStatusBarBreadcrumbItemView"])
 		arg2.origin.x = 6;
 	%orig;
 }
@@ -56,7 +56,7 @@ static float bread = 0;
 	if(draw){
 		draw = NO;
 		arg3 = 0.5;
-		arg2.origin.x += bread;
+		arg2.origin.x += bread + 6;
 	}
 	%orig;
 }
