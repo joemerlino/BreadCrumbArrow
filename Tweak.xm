@@ -1,4 +1,4 @@
-static BOOL name, hide;
+static BOOL name;
 
 %group NOIMAGE
 %hook _UIStatusBarSystemNavigationItemButton 
@@ -8,12 +8,7 @@ static BOOL name, hide;
 %end
 %end
 
-%group MOD
-
-id a;
-static BOOL draw = NO;
-static float bread = 0;
-
+%group CARRIER
 %hook UIStatusBarItem
 + (BOOL)isItemWithTypeExclusive:(int)arg1{
 	if(arg1 == 32)
@@ -21,6 +16,13 @@ static float bread = 0;
 	else return %orig;
 }
 %end
+%end
+
+%group MOD
+id a;
+static BOOL draw = NO;
+static float bread = 0;
+
 %hook UIStatusBarBreadcrumbItemView
 - (id)destinationText{
 	a = %orig;
@@ -32,10 +34,12 @@ static float bread = 0;
 	id title = %orig;
 	if(title)
 		return a;
-	else return %orig;
+	return %orig;
 }
 %end
+%end
 // float correctly the breadcrumb before the airplane icon
+%group FLOATING
 %hook UIStatusBarSystemNavigationItemView
 - (struct CGSize)_buttonSize{
 	CGSize btn = %orig;
@@ -88,12 +92,19 @@ static void PreferencesCallback(CFNotificationCenterRef center, void *observer, 
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PreferencesCallback, CFSTR("com.joemerlino.breadcrumbarrow.preferencechanged"), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:@"/private/var/mobile/Library/Preferences/com.joemerlino.breadcrumbarrow.plist"];
 	name = ([prefs objectForKey:@"name"] ? [[prefs objectForKey:@"name"] boolValue] : NO);
-	hide = ([prefs objectForKey:@"hide"] ? [[prefs objectForKey:@"hide"] boolValue] : NO);
-	if (!name && hide)
+	static BOOL hide = ([prefs objectForKey:@"hide"] ? [[prefs objectForKey:@"hide"] boolValue] : NO);
+	static BOOL carrier = ([prefs objectForKey:@"carrier"] ? [[prefs objectForKey:@"carrier"] boolValue] : YES);
+	static BOOL floating = ([prefs objectForKey:@"floating"] ? [[prefs objectForKey:@"floating"] boolValue] : NO);
+	if (!name && hide){
 		%init(HIDE);
+	}
 	else{
+		%init(MOD);
+		if(carrier)
+			%init(CARRIER);
+		if(floating)
+			%init(FLOATING);
 		if(hide)
 			%init(NOIMAGE);
-		%init(MOD);
 	}
 }
