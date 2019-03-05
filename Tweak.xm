@@ -15,6 +15,11 @@ static BOOL name;
 		return NO;
 	else return %orig;
 }
++ (BOOL)isItemWithTypeExclusive:(int)arg1 outBlacklistItems:(id)arg2 outWhitelistItems:(id)arg3{
+	if(arg1 == 32)
+		return NO;
+	else return %orig;
+}
 %end
 %end
 
@@ -70,6 +75,11 @@ static float bread = 0;
 %group HIDE
 %hook UIStatusBarItem
 + (BOOL)isItemWithTypeExclusive:(int)arg1{
+	if(arg1 == 32)
+		return NO;
+	else return %orig;
+}
++ (BOOL)isItemWithTypeExclusive:(int)arg1 outBlacklistItems:(id)arg2 outWhitelistItems:(id)arg3{
 	if(arg1 == 32)
 		return NO;
 	else return %orig;
